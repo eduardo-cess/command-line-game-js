@@ -1,5 +1,7 @@
 import readline from "readline"
 import { levels } from "./levels.js";
+import random from 'random'
+
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -8,14 +10,21 @@ const rl = readline.createInterface({
 
 let currentLevel = levels[0];
 let nextLevel = currentLevel;
+let currentPuzzleRandomNumber;
+let currentPuzzleResponse;
 
 function verifyAnswer(answer) {
+  let errorText = "Escolha uma alternativa válida!";
+  if(currentLevel.type === "puzzle") {
+    currentLevel.answers[0].text = currentPuzzleResponse.toString();
+    errorText = "Resposta errada! A combinação mudou."
+  }
   for (const pathAnswer of currentLevel.answers) {
     if(pathAnswer.text === answer) {
       return levels[pathAnswer.path];
     }
   }
-  console.log("Escolha uma alternativa válida!")
+  console.log(errorText);
   return currentLevel;
 }
 
@@ -28,10 +37,21 @@ function getPossibleAnswers() {
   return answersText;
 }
 
+function getPuzzleQuestion() {
+  currentPuzzleRandomNumber = random.int(0, 100);
+  currentPuzzleResponse = currentPuzzleRandomNumber * 3 - currentPuzzleRandomNumber;
+  return `
+    ${currentPuzzleRandomNumber} * 3 - ${currentPuzzleRandomNumber}
+    Digite a resposta do problema acima ou uma das opções abaixo:
+    voltar
+    sair
+  `;
+}
+
 function makeQuestion() {
   console.log(currentLevel.text);
-  if(currentLevel.isEndGame === false){
-    rl.question(getPossibleAnswers(), 
+  if(currentLevel.type !== "endgame"){
+    rl.question((currentLevel.type === "normal") ? getPossibleAnswers() : getPuzzleQuestion(), 
     (answer) => {
       console.log(`Resposta:  ${answer}\n\n`);
       nextLevel = verifyAnswer(answer);
